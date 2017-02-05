@@ -30,7 +30,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 __author__ = 'bjherger'
 __license__ = 'http://opensource.org/licenses/MIT'
-__version__ = '2.0'
+__version__ = '2.1'
 __email__ = '13herger@gmail.com'
 __status__ = 'Development'
 __maintainer__ = 'bjherger'
@@ -227,6 +227,41 @@ def term_match(string_to_search, term):
                       str(string_to_search) + ': ' + str(exception_instance))
         return None
 
+def check_title_city_state(string_to_search):
+    """
+        Find the title of the job, location by city and state
+        :param string_to_search: A string to check for a physical address in
+        :type string_to_search: str
+        :return: array of strings with job, location by city and state
+        :rtype: bytearray
+        """
+    try:
+        regular_expression = re.compile(r"([A-Z][a-z][\w-]*(\s+[A-Z][\w-]*)+),\s([^,]+),\s([A-Z]{2})")
+        result = re.findall((regular_expression), string_to_search)
+
+        if len(result)>0:
+            #print len(result)
+            return result
+    except Exception, exception_instance:
+        logging.error('Issue parsing title, city, and state ' + string_to_search + str(exception_instance))
+        return None
+
+def check_years_worked(string_to_search):
+    """
+        Find the years worked for a given position
+        :param string_to_search: A string to check for a physical address in
+        :type string_to_search: str
+        :return: array of strings with job, location by city and state
+        :rtype: bytearray
+        """
+    try:
+        regular_expression = re.compile(r"(\d{4}\s-\s\d{4})")
+        result = re.findall((regular_expression), string_to_search)
+        if len(result)>0:
+               return result
+    except Exception, exception_instance:
+        logging.error('Issue parsing years worked ' + string_to_search + str(exception_instance))
+        return None
 
 def create_resume_df(data_path):
     """
@@ -256,7 +291,8 @@ def create_resume_df(data_path):
     file_list = glob.glob(path_glob)
 
     logging.info('Iterating through file_list: ' + str(file_list))
-    resume_summary_df = pd.DataFrame()
+    resume_summary_df = pd.DataFrame(columns=['file_path',  'raw_text', 'num_words', 'phone_number', 'area_code',    'email',    'email_domain', 'address',  'working_jobs', 'working_years',    'jobTitleLocation0',    'yearsWorked0', 'deltaYears0',  'jobTitleLocation1',    'yearsWorked1', 'deltaYears1',  'jobTitleLocation2',    'yearsWorked2', 'deltaYears2',  'jobTitleLocation3',    'yearsWorked3', 'deltaYears3',  'jobTitleLocation4',    'yearsWorked4', 'deltaYears4',  'jobTitleLocation5',    'yearsWorked5', 'deltaYears5',  'jobTitleLocation6',    'yearsWorked6', 'deltaYears6',  'jobTitleLocation7', 'yearsWorked7', 'deltaYears7', 'jobTitleLocation8', 'yearsWorked8',    'deltaYears8',  'jobTitleLocation9',  'yearsWorked9', 'deltaYears9',  'jobTitleLocation10',   'yearsWorked10',   'deltaYears10',])
+
 
     # Store metadata, raw text, and word count
     resume_summary_df["file_path"] = file_list
@@ -285,6 +321,40 @@ def create_resume_df(data_path):
     resume_summary_df["mysql_count"] = resume_summary_df["raw_text"].apply(functools.partial(term_count, term=r"mysql"))
     resume_summary_df["ms_office"] = resume_summary_df["raw_text"].apply(functools.partial(term_count, term=r"microsoft office"))
     resume_summary_df["analytics"] = resume_summary_df["raw_text"].apply(functools.partial(term_count, term=r"analytics"))
+
+    # Scrape job history
+    # Build variables to iterate list. Since experience varies, you have to add the columns and then copy and paste afterwards
+    #for index, row in resume_summary_df.iterrows():
+    resume_summary_df["working_jobs"] = resume_summary_df["raw_text"].apply(check_title_city_state)
+    resume_summary_df["working_years"] = resume_summary_df["raw_text"].apply(check_years_worked)
+
+    maxSize = 0
+    for index, row in resume_summary_df.iterrows():
+        jobDetails = resume_summary_df["working_jobs"][index]
+        yearDetails = resume_summary_df["working_years"][index]
+
+        counter = 0
+        if(jobDetails is not None):
+
+            try:
+                counter = 0
+                while (counter < len(jobDetails)):
+                     jobTitleLocation = "jobTitleLocation" + str(counter)
+                     yearsWorked = "yearsWorked" + str(counter)
+                     yearsDelta = "deltaYears" + str(counter)
+
+                    # index: row, counter: column
+                     print "counter: " + str(counter) + " index: " + str(index)
+                     print jobDetails[counter]
+
+                     resume_summary_df.loc[index+1, ((counter*3)+11)] = str(jobDetails[counter][0] + ", " + jobDetails[counter][2] +", "+ jobDetails[counter][3])
+                     resume_summary_df.loc[index+1, (counter*3)+12] = str(yearDetails[counter])
+                     resume_summary_df.loc[index+1, (counter*3)+13] = int(yearDetails[counter][6:])-int(yearDetails[counter][0:4])
+
+                     counter += 1
+            except: # catch *all* exceptions
+                e = sys.exc_info()[0]
+
 
     # Return enriched DF
     return resume_summary_df
