@@ -233,14 +233,14 @@ def check_title_city_state(string_to_search):
         :param string_to_search: A string to check for a physical address in
         :type string_to_search: str
         :return: array of strings with job, location by city and state
-        :rtype: bytearray
+        :rtype: str
         """
     try:
         regular_expression = re.compile(r"([A-Z][a-z][\w-]*(\s+[A-Z][\w-]*)+),\s([^,]+),\s([A-Z]{2})")
         result = re.findall((regular_expression), string_to_search)
 
         if len(result)>0:
-            #print len(result)
+            logging.debug('Number of results: {}'.format(len(result)))
             return result
     except Exception, exception_instance:
         logging.error('Issue parsing title, city, and state ' + string_to_search + str(exception_instance))
@@ -252,7 +252,7 @@ def check_years_worked(string_to_search):
         :param string_to_search: A string to check for a physical address in
         :type string_to_search: str
         :return: array of strings with job, location by city and state
-        :rtype: bytearray
+        :rtype: str
         """
     try:
         regular_expression = re.compile(r"(\d{4}\s-\s\d{4})")
