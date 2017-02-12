@@ -283,10 +283,10 @@ def check_education(string_to_search):
 
 def check_recognitions(string_to_search):
     """
-        Find the education information in their resume
+        Find the recognition information in their resume
         :param string_to_search: A string to check for education information
         :type string_to_search: str
-        :return: string of education information
+        :return: string of recognition information
         """
     try:
         # regular expression check for longer degree names
@@ -298,11 +298,48 @@ def check_recognitions(string_to_search):
             return str(result[0])
 
     except Exception, exception_instance:
-        logging.error('Issue parsing education ' + string_to_search + str(exception_instance))
+        logging.error('Issue parsing recognitions ' + string_to_search + str(exception_instance))
         return None
 
+def check_recognitions(string_to_search):
+    """
+        Find the recognition information in their resume
+        :param string_to_search: A string to check for education information
+        :type string_to_search: str
+        :return: string of recognition information
+        """
+    try:
+        # regular expression check for longer degree names
+        regular_expression = re.compile(r"RECOGNITION(.*)$")
 
+        result = re.findall((regular_expression), string_to_search)
 
+        if len(result) > 0:
+            return str(result[0])
+
+    except Exception, exception_instance:
+        logging.error('Issue parsing recognitions ' + string_to_search + str(exception_instance))
+        return None
+
+def check_activities(string_to_search):
+    """
+        Find the activity information in their resume
+        :param string_to_search: A string to check for education information
+        :type string_to_search: str
+        :return: string of activity information
+        """
+    try:
+        # regular expression check for longer degree names
+        regular_expression = re.compile(r"ACTIVITY HISTORY(.*)EDUCATION")
+
+        result = re.findall((regular_expression), string_to_search)
+
+        if len(result) > 0:
+            return str(result[0])
+
+    except Exception, exception_instance:
+        logging.error('Issue parsing activity ' + string_to_search + str(exception_instance))
+        return None
 
 def check_years_worked(string_to_search):
     """
@@ -349,7 +386,7 @@ def create_resume_df(data_path):
     file_list = glob.glob(path_glob)
 
     logging.info('Iterating through file_list: ' + str(file_list))
-    resume_summary_df = pd.DataFrame(columns=['file_path',  'raw_text', 'num_words', 'phone_number', 'area_code',    'email',    'email_domain', 'address',  'working_jobs', 'working_years', 'education', 'recognition',   'jobTitleLocation0',    'yearsWorked0', 'deltaYears0',  'jobTitleLocation1',    'yearsWorked1', 'deltaYears1',  'jobTitleLocation2',    'yearsWorked2', 'deltaYears2',  'jobTitleLocation3',    'yearsWorked3', 'deltaYears3',  'jobTitleLocation4',    'yearsWorked4', 'deltaYears4',  'jobTitleLocation5',    'yearsWorked5', 'deltaYears5',  'jobTitleLocation6',    'yearsWorked6', 'deltaYears6',  'jobTitleLocation7', 'yearsWorked7', 'deltaYears7', 'jobTitleLocation8', 'yearsWorked8',    'deltaYears8',  'jobTitleLocation9',  'yearsWorked9', 'deltaYears9',  'jobTitleLocation10',   'yearsWorked10',   'deltaYears10',])
+    resume_summary_df = pd.DataFrame(columns=['file_path',  'raw_text', 'num_words', 'phone_number', 'area_code',    'email',    'email_domain', 'address',  'working_jobs', 'working_years', 'education', 'recognition', 'activities', 'jobTitleLocation0',    'yearsWorked0', 'deltaYears0',  'jobTitleLocation1',    'yearsWorked1', 'deltaYears1',  'jobTitleLocation2',    'yearsWorked2', 'deltaYears2',  'jobTitleLocation3',    'yearsWorked3', 'deltaYears3',  'jobTitleLocation4',    'yearsWorked4', 'deltaYears4',  'jobTitleLocation5',    'yearsWorked5', 'deltaYears5',  'jobTitleLocation6',    'yearsWorked6', 'deltaYears6',  'jobTitleLocation7', 'yearsWorked7', 'deltaYears7', 'jobTitleLocation8', 'yearsWorked8',    'deltaYears8',  'jobTitleLocation9',  'yearsWorked9', 'deltaYears9',  'jobTitleLocation10',   'yearsWorked10',   'deltaYears10',])
 
 
     # Store metadata, raw text, and word count
@@ -388,6 +425,7 @@ def create_resume_df(data_path):
 
     resume_summary_df["education"] = resume_summary_df["raw_text"].apply(check_education)
     resume_summary_df["recognition"] = resume_summary_df["raw_text"].apply(check_recognitions)
+    resume_summary_df["activities"] = resume_summary_df["raw_text"].apply(check_activities)
 
     maxSize = 0
     for index, row in resume_summary_df.iterrows():
