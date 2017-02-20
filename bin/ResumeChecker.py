@@ -301,26 +301,6 @@ def check_recognitions(string_to_search):
         logging.error('Issue parsing recognitions ' + string_to_search + str(exception_instance))
         return None
 
-def check_recognitions(string_to_search):
-    """
-        Find the recognition information in their resume
-        :param string_to_search: A string to check for education information
-        :type string_to_search: str
-        :return: string of recognition information
-        """
-    try:
-        # regular expression check for longer degree names
-        regular_expression = re.compile(r"RECOGNITION(.*)$")
-
-        result = re.findall((regular_expression), string_to_search)
-
-        if len(result) > 0:
-            return str(result[0])
-
-    except Exception, exception_instance:
-        logging.error('Issue parsing recognitions ' + string_to_search + str(exception_instance))
-        return None
-
 def check_activities(string_to_search):
     """
         Find the activity information in their resume
